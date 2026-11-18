@@ -1,0 +1,12 @@
+{
+  "firestore": [
+    {
+      "database": "(default)",
+      "rules": "firestore.rules"
+    },
+    {
+      "database": "ai-studio-nepallossdamagee-85b00d9c-fa55-4e44-b60a-71c1ad3442cd",
+      "rules": "firestore.rules"
+    }
+  ]
+}

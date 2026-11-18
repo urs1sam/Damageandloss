@@ -1,0 +1,7 @@
+{
+  "name": "Nepal Loss & Damage Entry MIS",
+  "description": "Field-level disaster loss and damage entry form, dashboard analytics, major restoration tracker, and damage standard criteria management system for Nepal.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

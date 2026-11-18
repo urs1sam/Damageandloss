@@ -1,0 +1,659 @@
+{
+  "entities": {
+    "DamageEntry": {
+      "title": "DamageEntry",
+      "description": "A field-level disaster loss, damage, casualty, sector breakdown, and restoration tracking record in Nepal.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Unique entry identifier"
+        },
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID of the authenticated officer who created or owns the entry"
+        },
+        "assignedIds": {
+          "type": "array",
+          "description": "Bounded list (max 20) of Firebase Auth UIDs explicitly assigned access to view and edit this entry"
+        },
+        "date": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 24,
+          "description": "Incident or assessment date (YYYY-MM-DD)"
+        },
+        "province": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Nepal province name"
+        },
+        "district": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Nepal district name"
+        },
+        "municipality": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 150,
+          "description": "Municipality or rural municipality name"
+        },
+        "ward": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 30,
+          "description": "Ward number"
+        },
+        "tole": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Settlement, tole, or site name"
+        },
+        "lat": {
+          "type": "string",
+          "maxLength": 32,
+          "description": "Latitude coordinate string"
+        },
+        "lng": {
+          "type": "string",
+          "maxLength": 32,
+          "description": "Longitude coordinate string"
+        },
+        "hazard": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Hazard classification"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 250,
+          "description": "Incident title or event description"
+        },
+        "sector": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Primary sector name"
+        },
+        "standardId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Primary damage standard identifier"
+        },
+        "standardName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 220,
+          "description": "Primary damage standard or summary label"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["Minor", "Moderate", "Severe", "Catastrophic"],
+          "maxLength": 30,
+          "description": "Overall severity level"
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Primary measurement unit"
+        },
+        "qty": {
+          "type": "number",
+          "description": "Total damaged units"
+        },
+        "lossNPR": {
+          "type": "number",
+          "description": "Total estimated financial loss in NPR"
+        },
+        "sectorItems": {
+          "type": "array",
+          "description": "Bounded list (max 50) of sector-specific damage line items, each optionally carrying its own restoration tracking state"
+        },
+        "deaths": {
+          "type": "number",
+          "description": "Human death count"
+        },
+        "missing": {
+          "type": "number",
+          "description": "Missing persons count"
+        },
+        "injured": {
+          "type": "number",
+          "description": "Injured persons count"
+        },
+        "affectedHH": {
+          "type": "number",
+          "description": "Affected households count"
+        },
+        "fullyDisplaced": {
+          "type": "number",
+          "description": "Fully displaced households count"
+        },
+        "tempDisplaced": {
+          "type": "number",
+          "description": "Temporarily displaced households count"
+        },
+        "affectedPop": {
+          "type": "number",
+          "description": "Affected population estimate"
+        },
+        "casualties": {
+          "type": "number",
+          "description": "Total human casualties (deaths + missing + injured)"
+        },
+        "officer": {
+          "type": "string",
+          "maxLength": 150,
+          "description": "Reporting officer name (PII)"
+        },
+        "contact": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Reporting officer contact info (PII)"
+        },
+        "verification": {
+          "type": "string",
+          "enum": ["Pending Review", "Field Verified", "Approved by Palika"],
+          "maxLength": 40,
+          "description": "Verification workflow status"
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["Critical", "High", "Medium", "Low"],
+          "maxLength": 20,
+          "description": "Response priority level"
+        },
+        "remarks": {
+          "type": "string",
+          "maxLength": 2000,
+          "description": "Field observations and remarks"
+        },
+        "photoName": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Attached evidence filename"
+        },
+        "photoDataUrl": {
+          "type": "string",
+          "maxLength": 150000,
+          "description": "Compressed field evidence thumbnail data URL"
+        },
+        "reliefDurationDays": {
+          "type": "number",
+          "description": "Estimated number of days for requested relief supplies"
+        },
+        "reliefItems": {
+          "type": "array",
+          "description": "Bounded list (max 60) of requested relief material items with quantity, unit, and optional notes"
+        },
+        "trackRestoration": {
+          "type": "boolean",
+          "description": "Whether the entry is tracked in Major Restoration Tracker"
+        },
+        "restoration": {
+          "type": "object",
+          "description": "Restoration stage, budget, progress, agency, and logs"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last-updated timestamp"
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "date",
+        "province",
+        "district",
+        "municipality",
+        "ward",
+        "hazard",
+        "title",
+        "sector",
+        "standardId",
+        "standardName",
+        "severity",
+        "unit",
+        "qty",
+        "lossNPR",
+        "sectorItems",
+        "deaths",
+        "missing",
+        "injured",
+        "affectedHH",
+        "fullyDisplaced",
+        "tempDisplaced",
+        "affectedPop",
+        "casualties",
+        "officer",
+        "contact",
+        "verification",
+        "priority",
+        "remarks",
+        "trackRestoration",
+        "restoration",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "DamageStandard": {
+      "title": "DamageStandard",
+      "description": "Catalog definition of a damage criterion/standard under a sector.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Unique standard ID"
+        },
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Creator UID"
+        },
+        "scope": {
+          "type": "string",
+          "enum": ["system", "user"],
+          "maxLength": 20,
+          "description": "System-wide catalog entry (admin only) or user-scoped entry"
+        },
+        "code": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "Optional standard reference code"
+        },
+        "sector": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Sector name"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Damage standard display name"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["Minor", "Moderate", "Severe", "Catastrophic"],
+          "maxLength": 30,
+          "description": "Default severity level"
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Measurement unit"
+        },
+        "unitCost": {
+          "type": "number",
+          "description": "Default unit cost in NPR"
+        },
+        "criteria": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Assessment criteria notes"
+        },
+        "customQuestions": {
+          "type": "array",
+          "description": "Bounded list (max 30) of related questions for this standard"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp"
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "scope",
+        "sector",
+        "name",
+        "severity",
+        "unit",
+        "unitCost",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SectorConfig": {
+      "title": "SectorConfig",
+      "description": "Sector taxonomy item and its configured related assessment questions.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Slugified sector document ID"
+        },
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Creator UID"
+        },
+        "scope": {
+          "type": "string",
+          "enum": ["system", "user"],
+          "maxLength": 20,
+          "description": "System-wide or user-scoped sector"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Sector display name"
+        },
+        "questions": {
+          "type": "array",
+          "description": "Bounded list (max 40) of SectorQuestion objects"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp"
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "scope",
+        "name",
+        "questions",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "LocalBodyConfig": {
+      "title": "LocalBodyConfig",
+      "description": "Custom or updated municipality/rural municipality and ward count in Nepal.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Deterministic slug ID for province-district-name"
+        },
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Creator UID"
+        },
+        "scope": {
+          "type": "string",
+          "enum": ["system", "user"],
+          "maxLength": 20,
+          "description": "System-wide or user-scoped local body"
+        },
+        "province": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Province name"
+        },
+        "district": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "District name"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 150,
+          "description": "Municipality or rural municipality name"
+        },
+        "wards": {
+          "type": "number",
+          "description": "Number of wards (1 to 40)"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp"
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "scope",
+        "province",
+        "district",
+        "name",
+        "wards",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AdminMember": {
+      "title": "AdminMember",
+      "description": "Designated MIS administrator or superadmin record for RBAC verification.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the administrator"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["superadmin", "admin"],
+          "maxLength": 20,
+          "description": "Administrator role level"
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Email address associated with the admin UID"
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 150,
+          "description": "Display name of the administrator"
+        },
+        "assignedBy": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID of the superadmin who assigned this role"
+        },
+        "inviteId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Optional roleAssignments document ID used to claim this role"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp"
+        }
+      },
+      "required": ["uid", "role", "createdAt", "updatedAt"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated user directory record (PII-isolated to owner and superadmin) for UID/email lookup during ID assignment.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID"
+        },
+        "email": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 200,
+          "description": "Lowercase verified Google account email"
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 150,
+          "description": "Google account display name"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last-login timestamp"
+        }
+      },
+      "required": ["uid", "email", "createdAt", "updatedAt"]
+    },
+    "RoleAssignment": {
+      "title": "RoleAssignment",
+      "description": "Superadmin-created role assignment keyed by email so users can be assigned admin or superadmin before or after sign-in.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Deterministic assignment document ID"
+        },
+        "email": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 200,
+          "description": "Lowercase target user email"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["superadmin", "admin"],
+          "maxLength": 20,
+          "description": "Assigned role level"
+        },
+        "note": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Optional designation or office note"
+        },
+        "assignedBy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID of the superadmin who created this assignment"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp"
+        }
+      },
+      "required": ["id", "email", "role", "assignedBy", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/damageEntries/{entryId}": {
+      "schema": {
+        "$ref": "#/entities/DamageEntry"
+      },
+      "description": "Field-level disaster loss and damage entries with restoration tracking."
+    },
+    "/damageStandards/{standardId}": {
+      "schema": {
+        "$ref": "#/entities/DamageStandard"
+      },
+      "description": "Damage standard definitions organized by sector."
+    },
+    "/sectors/{sectorId}": {
+      "schema": {
+        "$ref": "#/entities/SectorConfig"
+      },
+      "description": "Configured sectors and their dynamic field assessment questions."
+    },
+    "/localBodies/{localBodyId}": {
+      "schema": {
+        "$ref": "#/entities/LocalBodyConfig"
+      },
+      "description": "Custom or updated municipalities/rural municipalities and ward counts."
+    },
+    "/admins/{adminUid}": {
+      "schema": {
+        "$ref": "#/entities/AdminMember"
+      },
+      "description": "Authoritative administrator & superadmin UID registry for role lookup."
+    },
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "Signed-in user directory (UID, email, name) isolated to owner and superadmin."
+    },
+    "/roleAssignments/{assignmentId}": {
+      "schema": {
+        "$ref": "#/entities/RoleAssignment"
+      },
+      "description": "Email-based role pre-assignments managed exclusively by superadmins."
+    }
+  }
+}

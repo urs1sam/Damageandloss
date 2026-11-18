@@ -1,0 +1,371 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Reusable Hardened Global Primitives
+    // -------------------------------------------------------------------------
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn();
+    }
+
+    // Pure token check for Bootstrapped Super Admin (zero DB reads)
+    function isBootstrappedSuperAdmin() {
+      return isSignedIn()
+        && (
+          request.auth.uid == '3Sbpy52qM9Ofiv4fdqINvle0AAT2'
+          || (request.auth.token.email is string && request.auth.token.email.toLowerCase() == 'shrestha.nibas@gmail.com')
+        );
+    }
+
+    // Super Admin check
+    function isSuperAdmin() {
+      return isBootstrappedSuperAdmin() || (
+        isSignedIn()
+        && (
+          exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+          ? get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'superadmin'
+          : false
+        )
+      );
+    }
+
+    // Admin check
+    function isAdmin() {
+      return isBootstrappedSuperAdmin() || (
+        isSignedIn()
+        && (
+          exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+          ? get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['admin', 'superadmin']
+          : false
+        )
+      );
+    }
+
+    function isServerNow(ts) {
+      return ts is timestamp;
+    }
+
+    // -------------------------------------------------------------------------
+    // Validation Blueprints
+    // -------------------------------------------------------------------------
+    function isValidRestoration(r) {
+      return r is map
+        && r.keys().hasAll(['stage', 'progress', 'budget', 'spent', 'agency', 'targetDate', 'logs'])
+        && r.keys().hasOnly(['stage', 'progress', 'budget', 'spent', 'agency', 'targetDate', 'logs'])
+        && r.stage in ['Not Started', 'Technical Assessment', 'Procurement / Tender', 'In Progress', 'Restored']
+        && r.progress is number && r.progress >= 0 && r.progress <= 100
+        && r.budget is number && r.budget >= 0
+        && r.spent is number && r.spent >= 0
+        && r.agency is string && r.agency.size() <= 200
+        && r.targetDate is string && r.targetDate.size() <= 30
+        && r.logs is list
+        && r.logs.size() <= 100;
+    }
+
+    function isValidDamageEntry(data, entryId) {
+      return data.keys().hasAll([
+          'id', 'ownerId', 'date', 'province', 'district', 'municipality', 'ward',
+          'hazard', 'title', 'sector', 'standardId', 'standardName', 'severity',
+          'unit', 'qty', 'lossNPR', 'sectorItems', 'deaths', 'missing', 'injured',
+          'affectedHH', 'fullyDisplaced', 'tempDisplaced', 'affectedPop', 'casualties',
+          'officer', 'contact', 'verification', 'priority', 'remarks',
+          'trackRestoration', 'restoration', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'ownerId', 'assignedIds', 'date', 'province', 'district', 'municipality', 'ward',
+          'tole', 'lat', 'lng', 'hazard', 'title', 'sector', 'standardId', 'standardName',
+          'severity', 'unit', 'qty', 'lossNPR', 'sectorItems', 'deaths', 'missing',
+          'injured', 'affectedHH', 'fullyDisplaced', 'tempDisplaced', 'affectedPop',
+          'casualties', 'officer', 'contact', 'verification', 'priority', 'remarks',
+          'photoName', 'photoDataUrl', 'reliefDurationDays', 'reliefItems',
+          'trackRestoration', 'restoration', 'createdAt', 'updatedAt'
+        ])
+        && data.id == entryId
+        && isValidId(data.ownerId)
+        && data.date is string
+        && data.province is string
+        && data.district is string
+        && data.municipality is string
+        && data.ward is string
+        && data.hazard is string
+        && data.title is string
+        && data.sector is string
+        && isValidId(data.standardId)
+        && data.standardName is string
+        && data.severity in ['Minor', 'Moderate', 'Severe', 'Catastrophic']
+        && data.unit is string
+        && data.qty is number
+        && data.lossNPR is number
+        && data.sectorItems is list
+        && data.deaths is number
+        && data.missing is number
+        && data.injured is number
+        && data.affectedHH is number
+        && data.fullyDisplaced is number
+        && data.tempDisplaced is number
+        && data.affectedPop is number
+        && data.casualties is number
+        && data.verification in ['Pending Review', 'Field Verified', 'Approved by Palika']
+        && data.priority in ['Critical', 'High', 'Medium', 'Low']
+        && data.trackRestoration is bool
+        && isValidRestoration(data.restoration)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidDamageStandard(data, standardId) {
+      return data.keys().hasAll(['id', 'ownerId', 'scope', 'sector', 'name', 'severity', 'unit', 'unitCost', 'createdAt', 'updatedAt'])
+        && data.id == standardId
+        && isValidId(data.ownerId)
+        && data.scope in ['system', 'user']
+        && data.sector is string
+        && data.name is string
+        && data.severity in ['Minor', 'Moderate', 'Severe', 'Catastrophic']
+        && data.unit is string
+        && data.unitCost is number
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidSectorConfig(data, sectorId) {
+      return data.keys().hasAll(['id', 'ownerId', 'scope', 'name', 'questions', 'createdAt', 'updatedAt'])
+        && data.id == sectorId
+        && isValidId(data.ownerId)
+        && data.scope in ['system', 'user']
+        && data.name is string
+        && data.questions is list
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidLocalBodyConfig(data, localBodyId) {
+      return data.keys().hasAll(['id', 'ownerId', 'scope', 'province', 'district', 'name', 'wards', 'createdAt', 'updatedAt'])
+        && data.id == localBodyId
+        && isValidId(data.ownerId)
+        && data.scope in ['system', 'user']
+        && data.province is string
+        && data.district is string
+        && data.name is string
+        && data.wards is number
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // -------------------------------------------------------------------------
+    // Collection Rules (Admin Bypass + Scoped User Rules)
+    // -------------------------------------------------------------------------
+
+    // 1. Damage Entries
+    match /damageEntries/{entryId} {
+      allow get, list, create, update, delete: if isVerifiedUser() && isAdmin();
+
+      allow get: if isVerifiedUser()
+        && isValidId(entryId)
+        && (
+          resource == null
+          || ('ownerId' in existing() && existing().ownerId == request.auth.uid)
+          || ('assignedIds' in existing() && existing().assignedIds is list && request.auth.uid in existing().assignedIds)
+        );
+
+      allow list: if isVerifiedUser()
+        && (
+          resource.data.ownerId == request.auth.uid
+          || ('assignedIds' in resource.data
+              && resource.data.assignedIds is list
+              && request.auth.uid in resource.data.assignedIds)
+        );
+
+      allow create: if isVerifiedUser()
+        && isValidId(entryId)
+        && isValidDamageEntry(incoming(), entryId)
+        && isServerNow(incoming().createdAt)
+        && isServerNow(incoming().updatedAt)
+        && incoming().ownerId == request.auth.uid
+        && incoming().verification == 'Pending Review'
+        && (!('assignedIds' in incoming()) || incoming().assignedIds.size() == 0);
+
+      allow update: if isVerifiedUser()
+        && isValidId(entryId)
+        && isValidDamageEntry(incoming(), entryId)
+        && isServerNow(incoming().updatedAt)
+        && (
+          (
+            (
+              ('ownerId' in existing() && existing().ownerId == request.auth.uid) ||
+              ('assignedIds' in existing() && existing().assignedIds is list && request.auth.uid in existing().assignedIds)
+            )
+            && ('id' in existing() && existing().id == entryId && incoming().id == existing().id)
+            && ('ownerId' in existing() && incoming().ownerId == existing().ownerId)
+            && ('verification' in existing() && existing().verification != 'Approved by Palika' && incoming().verification == existing().verification)
+          ) ||
+          (
+            (
+              ('ownerId' in existing() && existing().ownerId == request.auth.uid) ||
+              ('assignedIds' in existing() && existing().assignedIds is list && request.auth.uid in existing().assignedIds)
+            )
+            && ('id' in existing() && existing().id == entryId && incoming().id == existing().id)
+            && ('ownerId' in existing() && incoming().ownerId == existing().ownerId)
+            && ('verification' in existing() && existing().verification != 'Approved by Palika')
+          )
+        );
+
+      allow delete: if isVerifiedUser()
+        && isValidId(entryId)
+        && ('ownerId' in existing() && existing().ownerId == request.auth.uid && (!('verification' in existing()) || existing().verification != 'Approved by Palika'));
+    }
+
+    // 2. Damage Standards
+    match /damageStandards/{standardId} {
+      allow get, list, create, update, delete: if isVerifiedUser() && isAdmin();
+
+      allow get: if isVerifiedUser()
+        && isValidId(standardId)
+        && (
+          resource == null
+          || ('scope' in existing() && existing().scope == 'system')
+          || ('ownerId' in existing() && existing().ownerId == request.auth.uid)
+        );
+
+      allow list: if isVerifiedUser()
+        && (resource.data.scope == 'system' || resource.data.ownerId == request.auth.uid);
+
+      allow create: if isVerifiedUser()
+        && isValidId(standardId)
+        && isValidDamageStandard(incoming(), standardId)
+        && incoming().ownerId == request.auth.uid
+        && isServerNow(incoming().createdAt)
+        && isServerNow(incoming().updatedAt)
+        && incoming().scope == 'user';
+
+      allow update: if isVerifiedUser()
+        && isValidId(standardId)
+        && isValidDamageStandard(incoming(), standardId)
+        && isServerNow(incoming().updatedAt)
+        && 'ownerId' in existing()
+        && existing().ownerId == request.auth.uid
+        && incoming().ownerId == existing().ownerId
+        && 'scope' in existing()
+        && existing().scope == 'user'
+        && incoming().scope == 'user';
+
+      allow delete: if isVerifiedUser()
+        && isValidId(standardId)
+        && ('ownerId' in existing() && existing().ownerId == request.auth.uid && 'scope' in existing() && existing().scope == 'user');
+    }
+
+    // 3. Sectors
+    match /sectors/{sectorId} {
+      allow get, list, create, update, delete: if isVerifiedUser() && isAdmin();
+
+      allow get: if isVerifiedUser()
+        && isValidId(sectorId)
+        && (
+          resource == null
+          || ('scope' in existing() && existing().scope == 'system')
+          || ('ownerId' in existing() && existing().ownerId == request.auth.uid)
+        );
+
+      allow list: if isVerifiedUser()
+        && (resource.data.scope == 'system' || resource.data.ownerId == request.auth.uid);
+
+      allow create: if isVerifiedUser()
+        && isValidId(sectorId)
+        && isValidSectorConfig(incoming(), sectorId)
+        && incoming().ownerId == request.auth.uid
+        && isServerNow(incoming().createdAt)
+        && isServerNow(incoming().updatedAt)
+        && incoming().scope == 'user';
+
+      allow update: if isVerifiedUser()
+        && isValidId(sectorId)
+        && isValidSectorConfig(incoming(), sectorId)
+        && isServerNow(incoming().updatedAt)
+        && 'ownerId' in existing()
+        && existing().ownerId == request.auth.uid
+        && incoming().ownerId == existing().ownerId
+        && 'scope' in existing()
+        && existing().scope == 'user'
+        && incoming().scope == 'user';
+
+      allow delete: if isVerifiedUser()
+        && isValidId(sectorId)
+        && ('ownerId' in existing() && existing().ownerId == request.auth.uid && 'scope' in existing() && existing().scope == 'user');
+    }
+
+    // 4. Local Bodies
+    match /localBodies/{localBodyId} {
+      allow get, list, create, update, delete: if isVerifiedUser() && isAdmin();
+
+      allow get: if isVerifiedUser()
+        && isValidId(localBodyId)
+        && (
+          resource == null
+          || ('scope' in existing() && existing().scope == 'system')
+          || ('ownerId' in existing() && existing().ownerId == request.auth.uid)
+        );
+
+      allow list: if isVerifiedUser()
+        && (resource.data.scope == 'system' || resource.data.ownerId == request.auth.uid);
+
+      allow create: if isVerifiedUser()
+        && isValidId(localBodyId)
+        && isValidLocalBodyConfig(incoming(), localBodyId)
+        && incoming().ownerId == request.auth.uid
+        && isServerNow(incoming().createdAt)
+        && isServerNow(incoming().updatedAt)
+        && incoming().scope == 'user';
+
+      allow update: if isVerifiedUser()
+        && isValidId(localBodyId)
+        && isValidLocalBodyConfig(incoming(), localBodyId)
+        && isServerNow(incoming().updatedAt)
+        && 'ownerId' in existing()
+        && existing().ownerId == request.auth.uid
+        && incoming().ownerId == existing().ownerId
+        && 'scope' in existing()
+        && existing().scope == 'user'
+        && incoming().scope == 'user';
+
+      allow delete: if isVerifiedUser()
+        && isValidId(localBodyId)
+        && ('ownerId' in existing() && existing().ownerId == request.auth.uid && 'scope' in existing() && existing().scope == 'user');
+    }
+
+    // 5. Admins
+    match /admins/{adminUid} {
+      allow get, list, create, update, delete: if isVerifiedUser() && (isAdmin() || adminUid == request.auth.uid);
+    }
+
+    // 6. Users
+    match /users/{userId} {
+      allow get, list, create, update, delete: if isVerifiedUser() && (isAdmin() || userId == request.auth.uid);
+    }
+
+    // 7. Role Assignments
+    match /roleAssignments/{assignmentId} {
+      allow get, list, create, update, delete: if isVerifiedUser() && isAdmin();
+    }
+  }
+}
